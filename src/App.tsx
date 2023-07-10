@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
 const Input = styled.input`
@@ -23,6 +23,7 @@ interface Todo {
 const App: React.FC = () => {
   const [data, setData] = useState<Todo[]>([]);
   const [result, setResult] = useState<Todo[]>([]);
+  const [isThrottled, setIsThrottled] = useState(false);
 
   useEffect(() => {
     fetch('https://jsonplaceholder.typicode.com/todos')
@@ -35,20 +36,38 @@ const App: React.FC = () => {
       });
   }, []);
 
-  const debounce = <T extends any[]>(
-    fn: (...args: T) => void,
-    delay = 1000
-  ) => {
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    return (...args: T) => {
-      clearTimeout(timeoutId!);
-      timeoutId = setTimeout(() => {
-        fn(...args);
-      }, delay);
-    };
-  };
+  const debounce = useCallback(
+    (fn: (...args) => void, delay = 1000): Function => {
+      let timeoutId = null;
+      return (...args) => {
+        clearTimeout(timeoutId!);
+        timeoutId = setTimeout(() => {
+          fn(...args);
+        }, delay);
+      };
+    },
+    []
+  );
 
-  const onChange = debounce((searchText: string) => {
+  const throttle = useCallback(
+    (fn: (...args) => void, delay = 3000): Function => {
+      return (...args: any[]) => {
+        if (isThrottled) {
+          return;
+        }
+        console.log(isThrottled);
+        setIsThrottled(true);
+        fn(...args);
+
+        setTimeout(() => {
+          setIsThrottled(false);
+        }, delay);
+      };
+    },
+    [isThrottled]
+  );
+
+  const onChange = throttle((searchText: string) => {
     const sanitizedSearchText = searchText.trim().toLowerCase();
     if (sanitizedSearchText.length < 2) {
       setResult([]);
@@ -63,7 +82,7 @@ const App: React.FC = () => {
   return (
     <Container>
       <h1>Search!</h1>
-      <Input onChange={(e) => onChange(e.target.value)} />
+      <Input onChange={(e) => e?.target?.value && onChange(e.target.value)} />
       {result.map((e) => {
         return <p>{e.title}</p>;
       })}
