@@ -55,7 +55,6 @@ const App: React.FC = () => {
         if (isThrottled) {
           return;
         }
-        console.log(isThrottled);
         setIsThrottled(true);
         fn(...args);
 
