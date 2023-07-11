@@ -36,6 +36,14 @@ const App: React.FC = () => {
       });
   }, []);
 
+  // Limit the frequency of function & Api calls etc.
+
+  /**
+   * Debounce - If the function is called multiple times at
+   * specified interval, only the  last invocation is
+   * executed , and previous invocations within the interval
+   * are ignored
+   */
   const debounce = useCallback(
     (fn: (...args) => void, delay = 1000): Function => {
       let timeoutId = null;
@@ -49,6 +57,12 @@ const App: React.FC = () => {
     []
   );
 
+  /**
+   * Throttle - If the function is called multiple times
+   * only the the first invocation is executed , and
+   * subsequent invocations are ignored until the
+   * interval expires
+   */
   const throttle = useCallback(
     (fn: (...args) => void, delay = 3000): Function => {
       return (...args: any[]) => {
@@ -68,7 +82,7 @@ const App: React.FC = () => {
 
   const onChange = throttle((searchText: string) => {
     const sanitizedSearchText = searchText.trim().toLowerCase();
-    if (sanitizedSearchText.length < 2) {
+    if (!sanitizedSearchText) {
       setResult([]);
       return;
     }
